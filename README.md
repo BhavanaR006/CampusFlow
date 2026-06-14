@@ -143,7 +143,8 @@ http://localhost:8000
 5. **Notices** → 6 cards with AI-generated 2-line summaries + urgency tags
 6. **Schedule** → Weekly Mon-Sat grid, color-coded by type
 7. **Attendance** → CN in red (68%), OS in amber (78%), can-I-skip calculator
-8. **Personal Life** → Budget bar (₹3800/₹5000), mood check-in, placement board
+8. **Exams** → Countdown cards with days remaining, venue, syllabus
+9. **Personal Life** → Budget bar (₹3700/₹5000), mood check-in, burnout detection, placement board
 
 ---
 
