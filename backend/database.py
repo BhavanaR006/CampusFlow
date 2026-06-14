@@ -10,6 +10,10 @@ from datetime import datetime, timedelta, date
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "campusflow.db")
 
+# On AWS Lambda, /var/task is read-only — use /tmp instead
+if os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+    DB_PATH = "/tmp/campusflow.db"
+
 
 def get_db():
     """Get database connection with row factory."""

@@ -60,38 +60,47 @@ def call_bedrock(system_prompt: str, user_message: str, max_tokens: int = 500) -
     if not bedrock_client:
         return None
 
-    # Try models in order of preference
+    # Try models in order of preference (using inference profile IDs for region compatibility)
     model_ids = [
-        "anthropic.claude-sonnet-4-6-20250514",
-        "anthropic.claude-3-5-sonnet-20241022-v2:0",
+        "apac.anthropic.claude-3-5-sonnet-20241022-v2:0",
+        "apac.anthropic.claude-3-haiku-20240307-v1:0",
         "anthropic.claude-3-sonnet-20240229-v1:0",
     ]
 
+    import time
     for model_id in model_ids:
-        try:
-            response = bedrock_client.invoke_model(
-                modelId=model_id,
-                contentType="application/json",
-                accept="application/json",
-                body=json.dumps({
-                    "anthropic_version": "bedrock-2023-05-31",
-                    "max_tokens": max_tokens,
-                    "system": system_prompt,
-                    "messages": [{"role": "user", "content": user_message}]
-                })
-            )
-            result = json.loads(response["body"].read())
-            return result["content"][0]["text"]
-        except Exception as e:
-            error_msg = str(e)
-            # If it's a model not found/invalid error, try next model
-            if "model identifier is invalid" in error_msg or "not found" in error_msg or "not authorized" in error_msg.lower() or "access" in error_msg.lower():
-                continue
-            # For other errors (throttling, etc), log and return None
-            print(f"Bedrock error with {model_id}: {e}")
-            return None
+        for attempt in range(2):
+            try:
+                response = bedrock_client.invoke_model(
+                    modelId=model_id,
+                    contentType="application/json",
+                    accept="application/json",
+                    body=json.dumps({
+                        "anthropic_version": "bedrock-2023-05-31",
+                        "max_tokens": max_tokens,
+                        "system": system_prompt,
+                        "messages": [{"role": "user", "content": user_message}]
+                    })
+                )
+                result = json.loads(response["body"].read())
+                return result["content"][0]["text"]
+            except Exception as e:
+                error_msg = str(e)
+                # If throttled, wait and retry once
+                if "throttl" in error_msg.lower() or "Too many requests" in error_msg:
+                    if attempt == 0:
+                        time.sleep(1)
+                        continue
+                    # Second attempt also throttled, try next model
+                    break
+                # If it's a model not found/invalid error, try next model
+                if "model identifier is invalid" in error_msg or "not found" in error_msg or "not authorized" in error_msg.lower() or "access" in error_msg.lower():
+                    break
+                # For other errors, return None
+                print(f"Bedrock error with {model_id}: {e}")
+                return None
 
-    print("Bedrock: No available model found, using fallback")
+    print("Bedrock: All models unavailable, using fallback")
     return None
 
 
