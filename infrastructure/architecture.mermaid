@@ -1,0 +1,30 @@
+graph TB
+    Student[Student Browser] --> CF[CloudFront CDN]
+    CF --> S3[S3 Static Website<br/>index.html]
+    Student --> AG[API Gateway HTTP API]
+    AG --> Lambda[AWS Lambda<br/>FastAPI + Mangum]
+    Lambda --> SQLite[(SQLite campusflow.db)]
+    Lambda --> Bedrock[AWS Bedrock<br/>Claude Sonnet]
+    Lambda --> S3KB[S3 Knowledge Base]
+
+    subgraph "AI Features"
+        Bedrock --> Chat[CampusBot RAG Q&A]
+        Bedrock --> Summarize[Notice Summarizer]
+        Bedrock --> Digest[Morning Digest]
+        Bedrock --> Nudges[Proactive Alerts]
+    end
+
+    subgraph "Data Layer"
+        SQLite --> Users[(Users)]
+        SQLite --> Schedule[(Schedule)]
+        SQLite --> Attendance[(Attendance)]
+        SQLite --> Tasks[(Tasks)]
+        SQLite --> Notices[(Notices)]
+    end
+
+    style Student fill:#4f7ef8,stroke:#333,color:#fff
+    style Bedrock fill:#ff9900,stroke:#333,color:#fff
+    style Lambda fill:#ff9900,stroke:#333,color:#fff
+    style S3 fill:#569a31,stroke:#333,color:#fff
+    style CF fill:#8c4fff,stroke:#333,color:#fff
+    style AG fill:#ff4f8b,stroke:#333,color:#fff

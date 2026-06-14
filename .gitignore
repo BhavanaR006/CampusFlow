@@ -1,0 +1,27 @@
+# Environment & Secrets
+backend/.env
+
+# Database
+backend/campusflow.db
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+
+# Archives
+*.zip
+
+# IDE
+.vscode/
+.idea/

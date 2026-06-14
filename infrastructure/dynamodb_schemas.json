@@ -1,0 +1,130 @@
+{
+  "tables": [
+    {
+      "TableName": "campusflow-users",
+      "KeySchema": [{"AttributeName": "id", "KeyType": "HASH"}],
+      "AttributeDefinitions": [{"AttributeName": "id", "AttributeType": "S"}],
+      "BillingMode": "PAY_PER_REQUEST"
+    },
+    {
+      "TableName": "campusflow-schedule",
+      "KeySchema": [
+        {"AttributeName": "user_id", "KeyType": "HASH"},
+        {"AttributeName": "id", "KeyType": "RANGE"}
+      ],
+      "AttributeDefinitions": [
+        {"AttributeName": "user_id", "AttributeType": "S"},
+        {"AttributeName": "id", "AttributeType": "S"}
+      ],
+      "BillingMode": "PAY_PER_REQUEST"
+    },
+    {
+      "TableName": "campusflow-notices",
+      "KeySchema": [
+        {"AttributeName": "user_id", "KeyType": "HASH"},
+        {"AttributeName": "created_at", "KeyType": "RANGE"}
+      ],
+      "AttributeDefinitions": [
+        {"AttributeName": "user_id", "AttributeType": "S"},
+        {"AttributeName": "created_at", "AttributeType": "S"}
+      ],
+      "BillingMode": "PAY_PER_REQUEST"
+    },
+    {
+      "TableName": "campusflow-tasks",
+      "KeySchema": [
+        {"AttributeName": "user_id", "KeyType": "HASH"},
+        {"AttributeName": "id", "KeyType": "RANGE"}
+      ],
+      "AttributeDefinitions": [
+        {"AttributeName": "user_id", "AttributeType": "S"},
+        {"AttributeName": "id", "AttributeType": "S"}
+      ],
+      "BillingMode": "PAY_PER_REQUEST"
+    },
+    {
+      "TableName": "campusflow-attendance",
+      "KeySchema": [
+        {"AttributeName": "user_id", "KeyType": "HASH"},
+        {"AttributeName": "subject", "KeyType": "RANGE"}
+      ],
+      "AttributeDefinitions": [
+        {"AttributeName": "user_id", "AttributeType": "S"},
+        {"AttributeName": "subject", "AttributeType": "S"}
+      ],
+      "BillingMode": "PAY_PER_REQUEST"
+    },
+    {
+      "TableName": "campusflow-exams",
+      "KeySchema": [
+        {"AttributeName": "user_id", "KeyType": "HASH"},
+        {"AttributeName": "exam_date", "KeyType": "RANGE"}
+      ],
+      "AttributeDefinitions": [
+        {"AttributeName": "user_id", "AttributeType": "S"},
+        {"AttributeName": "exam_date", "AttributeType": "S"}
+      ],
+      "BillingMode": "PAY_PER_REQUEST"
+    },
+    {
+      "TableName": "campusflow-chat-history",
+      "KeySchema": [
+        {"AttributeName": "user_id", "KeyType": "HASH"},
+        {"AttributeName": "created_at", "KeyType": "RANGE"}
+      ],
+      "AttributeDefinitions": [
+        {"AttributeName": "user_id", "AttributeType": "S"},
+        {"AttributeName": "created_at", "AttributeType": "S"}
+      ],
+      "BillingMode": "PAY_PER_REQUEST"
+    },
+    {
+      "TableName": "campusflow-alerts",
+      "KeySchema": [
+        {"AttributeName": "user_id", "KeyType": "HASH"},
+        {"AttributeName": "created_at", "KeyType": "RANGE"}
+      ],
+      "AttributeDefinitions": [
+        {"AttributeName": "user_id", "AttributeType": "S"},
+        {"AttributeName": "created_at", "AttributeType": "S"}
+      ],
+      "BillingMode": "PAY_PER_REQUEST"
+    },
+    {
+      "TableName": "campusflow-expenses",
+      "KeySchema": [
+        {"AttributeName": "user_id", "KeyType": "HASH"},
+        {"AttributeName": "created_at", "KeyType": "RANGE"}
+      ],
+      "AttributeDefinitions": [
+        {"AttributeName": "user_id", "AttributeType": "S"},
+        {"AttributeName": "created_at", "AttributeType": "S"}
+      ],
+      "BillingMode": "PAY_PER_REQUEST"
+    },
+    {
+      "TableName": "campusflow-mood-checkins",
+      "KeySchema": [
+        {"AttributeName": "user_id", "KeyType": "HASH"},
+        {"AttributeName": "created_at", "KeyType": "RANGE"}
+      ],
+      "AttributeDefinitions": [
+        {"AttributeName": "user_id", "AttributeType": "S"},
+        {"AttributeName": "created_at", "AttributeType": "S"}
+      ],
+      "BillingMode": "PAY_PER_REQUEST"
+    },
+    {
+      "TableName": "campusflow-placement-apps",
+      "KeySchema": [
+        {"AttributeName": "user_id", "KeyType": "HASH"},
+        {"AttributeName": "id", "KeyType": "RANGE"}
+      ],
+      "AttributeDefinitions": [
+        {"AttributeName": "user_id", "AttributeType": "S"},
+        {"AttributeName": "id", "AttributeType": "S"}
+      ],
+      "BillingMode": "PAY_PER_REQUEST"
+    }
+  ]
+}

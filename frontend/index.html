@@ -1,0 +1,1462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CampusFlow — AI OS for College Life</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ─── CSS RESET & VARIABLES ─────────────────────────────────────────── */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #0f1117;
+            --surface: #181c27;
+            --surface2: #1e2333;
+            --surface3: #252a3a;
+            --accent: #4f7ef8;
+            --accent-hover: #6690ff;
+            --amber: #fbbf24;
+            --red: #ef4444;
+            --green: #22c55e;
+            --text: #e4e6eb;
+            --text-muted: #8b8fa3;
+            --text-dim: #5a5f72;
+            --border: #2a2f40;
+            --radius: 12px;
+            --radius-sm: 8px;
+            --shadow: 0 4px 24px rgba(0,0,0,0.3);
+        }
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        a { color: var(--accent); text-decoration: none; }
+        button { cursor: pointer; font-family: inherit; border: none; }
+        input, textarea { font-family: inherit; }
+
+        /* ─── LAYOUT ────────────────────────────────────────────────────────── */
+        .app { display: flex; min-height: 100vh; }
+        .sidebar {
+            width: 240px;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0; left: 0; bottom: 0;
+            z-index: 100;
+            transition: transform 0.3s;
+        }
+        .sidebar-logo {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--accent);
+            padding: 0 8px 24px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 16px;
+        }
+        .sidebar-logo span { color: var(--text); }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: var(--radius-sm);
+            color: var(--text-muted);
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            margin-bottom: 4px;
+        }
+        .nav-item:hover { background: var(--surface2); color: var(--text); }
+        .nav-item.active { background: var(--accent); color: white; }
+        .nav-item svg { width: 20px; height: 20px; flex-shrink: 0; }
+        .nav-badge {
+            margin-left: auto;
+            background: var(--red);
+            color: white;
+            font-size: 11px;
+            padding: 2px 7px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+        .main-content {
+            flex: 1;
+            margin-left: 240px;
+            padding: 32px;
+            max-width: 1200px;
+        }
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        /* ─── MOBILE BOTTOM NAV ─────────────────────────────────────────────── */
+        .bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            padding: 8px 0 env(safe-area-inset-bottom, 8px);
+            z-index: 100;
+            justify-content: space-around;
+        }
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-muted);
+            font-size: 10px;
+            padding: 6px 12px;
+            border-radius: 8px;
+        }
+        .bottom-nav-item.active { color: var(--accent); }
+        .bottom-nav-item svg { width: 22px; height: 22px; }
+
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; padding: 16px; padding-bottom: 80px; }
+            .bottom-nav { display: flex; }
+            .mobile-header {
+                display: flex !important;
+                align-items: center;
+                justify-content: space-between;
+                padding: 12px 0 16px;
+            }
+        }
+        .mobile-header { display: none; }
+        .mobile-header h2 { font-size: 18px; font-weight: 600; }
+        .hamburger {
+            background: none; border: none; color: var(--text);
+            padding: 8px; border-radius: 8px;
+        }
+
+        /* ─── CARDS ─────────────────────────────────────────────────────────── */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        .card-title { font-size: 14px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* ─── STAT CARDS ────────────────────────────────────────────────────── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px;
+            text-align: center;
+        }
+        .stat-value { font-size: 28px; font-weight: 700; color: var(--accent); }
+        .stat-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+        .stat-card.warning .stat-value { color: var(--amber); }
+        .stat-card.danger .stat-value { color: var(--red); }
+
+        /* ─── LOGIN SCREEN ──────────────────────────────────────────────────── */
+        .login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .login-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: var(--shadow);
+        }
+        .login-box h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--accent);
+        }
+        .login-box p { color: var(--text-muted); margin-bottom: 24px; font-size: 14px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 6px; font-weight: 500; }
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text);
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+        .form-input:focus { outline: none; border-color: var(--accent); }
+        .btn {
+            padding: 12px 24px;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .btn-primary { background: var(--accent); color: white; width: 100%; }
+        .btn-primary:hover { background: var(--accent-hover); }
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+            width: 100%;
+            margin-top: 12px;
+        }
+        .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-sm { padding: 8px 16px; font-size: 12px; }
+
+        /* ─── DIGEST CARD ───────────────────────────────────────────────────── */
+        .digest-card {
+            background: linear-gradient(135deg, #1a2444 0%, #1e2a4a 100%);
+            border: 1px solid #2a3a5a;
+            border-radius: var(--radius);
+            padding: 24px;
+            margin-bottom: 24px;
+            line-height: 1.6;
+            font-size: 15px;
+        }
+        .digest-card .greeting { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+
+        /* ─── TIMELINE ──────────────────────────────────────────────────────── */
+        .timeline { position: relative; padding-left: 24px; }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 8px;
+            bottom: 8px;
+            width: 2px;
+            background: var(--border);
+        }
+        .timeline-item {
+            position: relative;
+            padding: 12px 0 12px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        .timeline-item:last-child { border-bottom: none; }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -20px;
+            top: 18px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--accent);
+            border: 2px solid var(--bg);
+        }
+        .timeline-item.urgent::before { background: var(--red); }
+        .timeline-item.warning::before { background: var(--amber); }
+        .timeline-time { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+        .timeline-title { font-size: 14px; font-weight: 500; margin-top: 2px; }
+        .timeline-meta { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+
+        /* ─── CHAT ──────────────────────────────────────────────────────────── */
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 120px);
+            max-height: 700px;
+        }
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 0;
+        }
+        .chat-bubble {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 16px;
+            margin-bottom: 12px;
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+        .chat-bubble.user {
+            background: var(--accent);
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+        }
+        .chat-bubble.assistant {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-bottom-left-radius: 4px;
+        }
+        .chat-input-area {
+            display: flex;
+            gap: 8px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+        .chat-input {
+            flex: 1;
+            padding: 12px 16px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            color: var(--text);
+            font-size: 14px;
+        }
+        .chat-input:focus { outline: none; border-color: var(--accent); }
+        .chat-send {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .chat-send:hover { background: var(--accent-hover); }
+        .typing-indicator {
+            display: none;
+            padding: 12px 16px;
+            background: var(--surface2);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            max-width: 80px;
+            margin-bottom: 12px;
+        }
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: var(--text-muted);
+            margin: 0 2px;
+            animation: typing 1.2s infinite;
+        }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typing { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-4px); } }
+
+        .suggested-questions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .suggested-q {
+            padding: 8px 14px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 12px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .suggested-q:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* ─── NOTICE CARDS ──────────────────────────────────────────────────── */
+        .notice-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px 20px;
+            margin-bottom: 12px;
+            transition: all 0.2s;
+            border-left: 4px solid var(--border);
+        }
+        .notice-card.urgent { border-left-color: var(--red); }
+        .notice-card.medium { border-left-color: var(--amber); }
+        .notice-card.low { border-left-color: var(--green); }
+        .notice-card.read { opacity: 0.6; }
+        .notice-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+        .notice-tag {
+            font-size: 10px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+        .notice-tag.urgent { background: rgba(239,68,68,0.15); color: var(--red); }
+        .notice-tag.medium { background: rgba(251,191,36,0.15); color: var(--amber); }
+        .notice-tag.low { background: rgba(34,197,94,0.15); color: var(--green); }
+        .notice-tag.category { background: rgba(79,126,248,0.1); color: var(--accent); }
+        .notice-title { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+        .notice-summary { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+        .notice-meta { display: flex; align-items: center; gap: 12px; margin-top: 8px; font-size: 11px; color: var(--text-dim); }
+
+        .filter-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .filter-btn {
+            padding: 6px 14px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 12px;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+        .filter-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+        /* ─── SCHEDULE GRID ─────────────────────────────────────────────────── */
+        .schedule-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+            overflow-x: auto;
+        }
+        @media (max-width: 768px) { .schedule-grid { grid-template-columns: repeat(3, 1fr); } }
+        .schedule-day {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 12px;
+            min-width: 140px;
+        }
+        .schedule-day-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--accent);
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+        .schedule-day-title.today { color: var(--amber); }
+        .schedule-event {
+            padding: 8px 10px;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            font-size: 12px;
+            border-left: 3px solid var(--accent);
+        }
+        .schedule-event.class { border-left-color: var(--accent); background: rgba(79,126,248,0.08); }
+        .schedule-event.lab { border-left-color: #8b5cf6; background: rgba(139,92,246,0.08); }
+        .schedule-event.deadline { border-left-color: var(--red); background: rgba(239,68,68,0.08); }
+        .schedule-event.exam { border-left-color: var(--amber); background: rgba(251,191,36,0.08); }
+        .schedule-event.club { border-left-color: var(--green); background: rgba(34,197,94,0.08); }
+        .schedule-event.break { border-left-color: var(--text-dim); background: rgba(90,95,114,0.08); }
+        .schedule-event.transport { border-left-color: #06b6d4; background: rgba(6,182,212,0.08); }
+        .schedule-event.maintenance { border-left-color: var(--amber); background: rgba(251,191,36,0.08); }
+        .schedule-event-time { font-size: 10px; color: var(--text-muted); font-weight: 500; }
+        .schedule-event-title { font-weight: 500; margin-top: 2px; }
+        .schedule-event-loc { font-size: 10px; color: var(--text-dim); margin-top: 1px; }
+
+        /* ─── ATTENDANCE ────────────────────────────────────────────────────── */
+        .attendance-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+        .att-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+        }
+        .att-subject { font-size: 15px; font-weight: 600; margin-bottom: 12px; }
+        .att-bar-container {
+            height: 8px;
+            background: var(--surface3);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+        .att-bar {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.6s ease;
+        }
+        .att-bar.safe { background: var(--green); }
+        .att-bar.warning { background: var(--amber); }
+        .att-bar.critical { background: var(--red); }
+        .att-stats { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); }
+        .att-pct { font-size: 22px; font-weight: 700; }
+        .att-pct.safe { color: var(--green); }
+        .att-pct.warning { color: var(--amber); }
+        .att-pct.critical { color: var(--red); }
+        .att-skip { margin-top: 10px; padding: 8px 12px; background: var(--surface2); border-radius: 6px; font-size: 12px; }
+        .att-skip.can { color: var(--green); }
+        .att-skip.cannot { color: var(--red); }
+
+        /* ─── EXAMS ─────────────────────────────────────────────────────────── */
+        .exam-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+        .exam-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+        }
+        .exam-countdown {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+        .exam-countdown.soon { color: var(--amber); }
+        .exam-countdown.imminent { color: var(--red); }
+        .exam-subject { font-size: 16px; font-weight: 600; margin: 8px 0; }
+        .exam-meta { font-size: 12px; color: var(--text-muted); }
+        .exam-syllabus { font-size: 12px; color: var(--text-dim); margin-top: 10px; padding: 10px; background: var(--surface2); border-radius: 6px; line-height: 1.4; }
+
+        /* ─── PERSONAL LIFE ─────────────────────────────────────────────────── */
+        .personal-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+        .budget-bar-container {
+            height: 12px;
+            background: var(--surface3);
+            border-radius: 6px;
+            overflow: hidden;
+            margin: 12px 0;
+        }
+        .budget-bar { height: 100%; border-radius: 6px; transition: width 0.6s; }
+        .budget-amounts { display: flex; justify-content: space-between; font-size: 13px; color: var(--text-muted); }
+        .budget-tip {
+            margin-top: 12px;
+            padding: 10px 14px;
+            background: rgba(251,191,36,0.08);
+            border: 1px solid rgba(251,191,36,0.2);
+            border-radius: 8px;
+            font-size: 13px;
+            color: var(--amber);
+        }
+
+        .mood-widget { display: flex; gap: 12px; margin: 16px 0; }
+        .mood-emoji {
+            font-size: 28px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+        .mood-emoji:hover { transform: scale(1.2); }
+        .mood-emoji.selected { border-color: var(--accent); background: rgba(79,126,248,0.1); transform: scale(1.2); }
+
+        .burnout-card {
+            padding: 16px;
+            border-radius: var(--radius-sm);
+            margin-top: 12px;
+        }
+        .burnout-card.high { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); }
+        .burnout-card.medium { background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.3); }
+        .burnout-card.low { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); }
+        .burnout-label { font-size: 13px; font-weight: 600; }
+        .burnout-card.high .burnout-label { color: var(--red); }
+        .burnout-card.medium .burnout-label { color: var(--amber); }
+        .burnout-card.low .burnout-label { color: var(--green); }
+
+        .placement-board { display: flex; gap: 12px; overflow-x: auto; padding: 8px 0; }
+        .placement-column {
+            min-width: 160px;
+            background: var(--surface2);
+            border-radius: var(--radius-sm);
+            padding: 12px;
+        }
+        .placement-col-title { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 10px; }
+        .placement-item {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+        .placement-company { font-weight: 600; }
+        .placement-role { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+        .expense-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+        }
+        .expense-item:last-child { border-bottom: none; }
+        .expense-amount { font-weight: 600; color: var(--red); }
+
+        /* ─── ALERTS/NUDGES ─────────────────────────────────────────────────── */
+        .nudge-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+        .nudge-card.critical { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); }
+        .nudge-card.warning { background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.2); }
+        .nudge-card.info { background: rgba(79,126,248,0.08); border: 1px solid rgba(79,126,248,0.2); }
+        .nudge-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .nudge-card.critical .nudge-dot { background: var(--red); }
+        .nudge-card.warning .nudge-dot { background: var(--amber); }
+        .nudge-card.info .nudge-dot { background: var(--accent); }
+        .nudge-dismiss {
+            margin-left: auto;
+            background: none;
+            color: var(--text-dim);
+            font-size: 18px;
+            padding: 4px;
+        }
+
+        /* ─── TASK LIST ─────────────────────────────────────────────────────── */
+        .task-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            margin-bottom: 8px;
+        }
+        .task-check {
+            width: 20px; height: 20px;
+            border: 2px solid var(--border);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+        .task-check:hover { border-color: var(--accent); }
+        .task-check.done { background: var(--green); border-color: var(--green); }
+        .task-title { font-size: 14px; flex: 1; }
+        .task-title.done { text-decoration: line-through; color: var(--text-dim); }
+        .task-priority {
+            font-size: 10px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+        .task-priority.high { background: rgba(239,68,68,0.15); color: var(--red); }
+        .task-priority.medium { background: rgba(251,191,36,0.15); color: var(--amber); }
+        .task-priority.low { background: rgba(34,197,94,0.15); color: var(--green); }
+        .task-due { font-size: 11px; color: var(--text-dim); }
+
+        /* ─── LOADING SKELETON ──────────────────────────────────────────────── */
+        .skeleton {
+            background: linear-gradient(90deg, var(--surface2) 25%, var(--surface3) 50%, var(--surface2) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 6px;
+        }
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        .skeleton-text { height: 14px; margin-bottom: 8px; width: 80%; }
+        .skeleton-card { height: 80px; margin-bottom: 12px; }
+
+        /* ─── SCROLLBAR ─────────────────────────────────────────────────────── */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 3px; }
+
+        /* ─── SECTION TITLE ─────────────────────────────────────────────────── */
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .page-title { font-size: 22px; font-weight: 700; margin-bottom: 24px; }
+
+        /* Add expense modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            width: 90%;
+            max-width: 400px;
+        }
+        .modal h3 { margin-bottom: 16px; }
+    </style>
+</head>
+<body>
+    <!-- ─── LOGIN SCREEN ──────────────────────────────────────────────────── -->
+    <div id="login-screen" class="login-container">
+        <div class="login-box">
+            <h1>🎓 CampusFlow</h1>
+            <p>AI Operating System for College Life</p>
+            <div class="form-group">
+                <label>Name</label>
+                <input type="text" id="login-name" class="form-input" placeholder="Enter your name">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="login-password" class="form-input" placeholder="Enter password">
+            </div>
+            <div id="login-error" style="color:var(--red);font-size:13px;margin-bottom:12px;display:none"></div>
+            <button class="btn btn-primary" onclick="doLogin()">Login</button>
+            <button class="btn btn-ghost" onclick="demoLogin()">🚀 Demo Login (Arjun Sharma)</button>
+        </div>
+    </div>
+
+    <!-- ─── MAIN APP ──────────────────────────────────────────────────────── -->
+    <div id="app" class="app" style="display:none">
+        <!-- Sidebar -->
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-logo">🎓 Campus<span>Flow</span></div>
+            <div class="nav-item active" onclick="navigate('dashboard')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                Dashboard
+            </div>
+            <div class="nav-item" onclick="navigate('chat')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                CampusBot
+            </div>
+            <div class="nav-item" onclick="navigate('notices')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                Notices
+                <span class="nav-badge" id="notice-badge" style="display:none">0</span>
+            </div>
+            <div class="nav-item" onclick="navigate('schedule')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                Schedule
+            </div>
+            <div class="nav-item" onclick="navigate('attendance')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                Attendance
+            </div>
+            <div class="nav-item" onclick="navigate('exams')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                Exams
+            </div>
+            <div class="nav-item" onclick="navigate('personal')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Personal Life
+            </div>
+        </nav>
+
+        <!-- Mobile Header -->
+        <div class="mobile-header" id="mobile-header">
+            <button class="hamburger" onclick="toggleSidebar()">☰</button>
+            <h2 id="mobile-title">Dashboard</h2>
+            <div style="width:32px"></div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard -->
+            <div id="screen-dashboard" class="screen active">
+                <div id="dashboard-content">
+                    <div class="skeleton skeleton-card"></div>
+                    <div class="skeleton skeleton-card"></div>
+                </div>
+            </div>
+
+            <!-- Chat -->
+            <div id="screen-chat" class="screen">
+                <h2 class="page-title">🤖 CampusBot</h2>
+                <div class="chat-container">
+                    <div class="suggested-questions" id="suggested-questions">
+                        <div class="suggested-q" onclick="askSuggested('Can I skip CN today?')">Can I skip CN today?</div>
+                        <div class="suggested-q" onclick="askSuggested('What\\'s due this week?')">What's due this week?</div>
+                        <div class="suggested-q" onclick="askSuggested('What\\'s the mess menu?')">What's the mess menu?</div>
+                        <div class="suggested-q" onclick="askSuggested('When is the fee deadline?')">When is the fee deadline?</div>
+                        <div class="suggested-q" onclick="askSuggested('Show my attendance')">Show my attendance</div>
+                    </div>
+                    <div class="chat-messages" id="chat-messages">
+                        <div class="chat-bubble assistant">Hi! I'm CampusFlow Bot 🎓 Ask me anything about your campus life — attendance, assignments, schedule, notices, or campus info!</div>
+                    </div>
+                    <div class="typing-indicator" id="typing-indicator">
+                        <span></span><span></span><span></span>
+                    </div>
+                    <div class="chat-input-area">
+                        <input type="text" class="chat-input" id="chat-input" placeholder="Ask anything..." onkeypress="if(event.key==='Enter')sendChat()">
+                        <button class="chat-send" onclick="sendChat()">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notices -->
+            <div id="screen-notices" class="screen">
+                <h2 class="page-title">🔔 Notices</h2>
+                <div class="filter-bar" id="notice-filters">
+                    <div class="filter-btn active" onclick="filterNotices('all')">All</div>
+                    <div class="filter-btn" onclick="filterNotices('academic')">Academic</div>
+                    <div class="filter-btn" onclick="filterNotices('placement')">Placement</div>
+                    <div class="filter-btn" onclick="filterNotices('hostel')">Hostel</div>
+                    <div class="filter-btn" onclick="filterNotices('transport')">Transport</div>
+                    <div class="filter-btn" onclick="filterNotices('club')">Club</div>
+                </div>
+                <div id="notices-list"></div>
+            </div>
+
+            <!-- Schedule -->
+            <div id="screen-schedule" class="screen">
+                <h2 class="page-title">📅 Weekly Schedule</h2>
+                <div id="schedule-content" class="schedule-grid"></div>
+            </div>
+
+            <!-- Attendance -->
+            <div id="screen-attendance" class="screen">
+                <h2 class="page-title">✅ Attendance Tracker</h2>
+                <div id="attendance-content" class="attendance-grid"></div>
+            </div>
+
+            <!-- Exams -->
+            <div id="screen-exams" class="screen">
+                <h2 class="page-title">📝 Exam Countdown</h2>
+                <div id="exams-content" class="exam-grid"></div>
+            </div>
+
+            <!-- Personal Life -->
+            <div id="screen-personal" class="screen">
+                <h2 class="page-title">👤 Personal Life</h2>
+                <div id="personal-content" class="personal-grid"></div>
+            </div>
+        </main>
+
+        <!-- Bottom Nav (Mobile) -->
+        <div class="bottom-nav">
+            <div class="bottom-nav-item active" onclick="navigate('dashboard')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                Home
+            </div>
+            <div class="bottom-nav-item" onclick="navigate('chat')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                Bot
+            </div>
+            <div class="bottom-nav-item" onclick="navigate('notices')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                Alerts
+            </div>
+            <div class="bottom-nav-item" onclick="navigate('attendance')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                Attend
+            </div>
+            <div class="bottom-nav-item" onclick="navigate('personal')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Me
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Expense Modal -->
+    <div class="modal-overlay" id="expense-modal">
+        <div class="modal">
+            <h3>Add Expense</h3>
+            <div class="form-group">
+                <label>Amount (₹)</label>
+                <input type="number" id="expense-amount" class="form-input" placeholder="100">
+            </div>
+            <div class="form-group">
+                <label>Category</label>
+                <select id="expense-category" class="form-input">
+                    <option value="food">Food</option>
+                    <option value="transport">Transport</option>
+                    <option value="stationery">Stationery</option>
+                    <option value="entertainment">Entertainment</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <input type="text" id="expense-desc" class="form-input" placeholder="What did you spend on?">
+            </div>
+            <div style="display:flex;gap:8px">
+                <button class="btn btn-primary" style="flex:1" onclick="submitExpense()">Add</button>
+                <button class="btn btn-ghost" style="flex:1;margin-top:0" onclick="closeExpenseModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────────────────────────
+const API = window.location.origin + '/api';
+let currentUser = null;
+let currentScreen = 'dashboard';
+let allNotices = [];
+
+// ─── AUTH ────────────────────────────────────────────────────────────────────
+function demoLogin() {
+    document.getElementById('login-name').value = 'Arjun Sharma';
+    document.getElementById('login-password').value = 'demo123';
+    doLogin();
+}
+
+async function doLogin() {
+    const name = document.getElementById('login-name').value;
+    const password = document.getElementById('login-password').value;
+    const errEl = document.getElementById('login-error');
+
+    if (!name || !password) {
+        errEl.textContent = 'Please enter name and password';
+        errEl.style.display = 'block';
+        return;
+    }
+
+    try {
+        const res = await fetch(API + '/auth/login', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({name, password})
+        });
+        if (!res.ok) throw new Error('Invalid credentials');
+        currentUser = await res.json();
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('app').style.display = 'flex';
+        loadDashboard();
+        loadNudges();
+    } catch(e) {
+        errEl.textContent = e.message;
+        errEl.style.display = 'block';
+    }
+}
+
+// ─── NAVIGATION ──────────────────────────────────────────────────────────────
+function navigate(screen) {
+    currentScreen = screen;
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + screen).classList.add('active');
+
+    // Update nav active states
+    document.querySelectorAll('.nav-item').forEach((item, i) => {
+        item.classList.remove('active');
+    });
+    const screens = ['dashboard','chat','notices','schedule','attendance','exams','personal'];
+    const idx = screens.indexOf(screen);
+    document.querySelectorAll('.nav-item')[idx]?.classList.add('active');
+
+    // Update mobile bottom nav
+    document.querySelectorAll('.bottom-nav-item').forEach(item => item.classList.remove('active'));
+    const mobileMap = {dashboard:0, chat:1, notices:2, attendance:3, personal:4};
+    if (mobileMap[screen] !== undefined) {
+        document.querySelectorAll('.bottom-nav-item')[mobileMap[screen]]?.classList.add('active');
+    }
+
+    // Update mobile title
+    const titles = {dashboard:'Dashboard',chat:'CampusBot',notices:'Notices',schedule:'Schedule',attendance:'Attendance',exams:'Exams',personal:'Personal Life'};
+    document.getElementById('mobile-title').textContent = titles[screen] || '';
+
+    // Load content
+    if (screen === 'notices') loadNotices();
+    if (screen === 'schedule') loadSchedule();
+    if (screen === 'attendance') loadAttendance();
+    if (screen === 'exams') loadExams();
+    if (screen === 'personal') loadPersonal();
+
+    // Close mobile sidebar
+    document.getElementById('sidebar').classList.remove('open');
+}
+
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+}
+
+// ─── DASHBOARD ───────────────────────────────────────────────────────────────
+async function loadDashboard() {
+    const container = document.getElementById('dashboard-content');
+    try {
+        const res = await fetch(API + '/dashboard?user_id=' + currentUser.user_id);
+        const data = await res.json();
+
+        const hour = new Date().getHours();
+        const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+
+        container.innerHTML = `
+            <div class="digest-card">
+                <div class="greeting">${greeting}, ${data.user.name}! 👋</div>
+                <div>${data.digest}</div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">${data.stats.classes_today}</div>
+                    <div class="stat-label">Classes Today</div>
+                </div>
+                <div class="stat-card ${data.stats.tasks_due > 2 ? 'warning' : ''}">
+                    <div class="stat-value">${data.stats.tasks_due}</div>
+                    <div class="stat-label">Tasks Due</div>
+                </div>
+                <div class="stat-card ${data.stats.unread_notices > 3 ? 'warning' : ''}">
+                    <div class="stat-value">${data.stats.unread_notices}</div>
+                    <div class="stat-label">Unread Notices</div>
+                </div>
+                <div class="stat-card ${data.stats.attendance_warnings > 0 ? 'danger' : ''}">
+                    <div class="stat-value">${data.stats.attendance_warnings}</div>
+                    <div class="stat-label">Attendance Warnings</div>
+                </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+                <div class="card">
+                    <div class="card-header"><span class="card-title">Today's Schedule</span></div>
+                    <div class="timeline">
+                        ${data.schedule_today.map(s => `
+                            <div class="timeline-item ${s.urgency === 'high' ? 'urgent' : s.urgency === 'medium' ? 'warning' : ''}">
+                                <div class="timeline-time">${s.start_time} - ${s.end_time}</div>
+                                <div class="timeline-title">${s.title}</div>
+                                <div class="timeline-meta">${s.location || ''}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header"><span class="card-title">Urgent Tasks</span></div>
+                    ${data.urgent_tasks.map(t => `
+                        <div class="task-item">
+                            <div class="task-check" onclick="completeTask(${t.id}, this)"></div>
+                            <span class="task-title">${t.title}</span>
+                            <span class="task-priority ${t.priority}">${t.priority}</span>
+                        </div>
+                    `).join('') || '<p style="color:var(--text-muted);font-size:13px">No urgent tasks! 🎉</p>'}
+                </div>
+            </div>
+
+            ${data.attendance_warnings.length > 0 ? `
+            <div class="card" style="margin-top:16px">
+                <div class="card-header"><span class="card-title">⚠️ Attendance Warnings</span></div>
+                ${data.attendance_warnings.map(w => `
+                    <div class="nudge-card ${w.status}">
+                        <div class="nudge-dot"></div>
+                        <span>${w.subject} — ${w.percentage}% ${w.status === 'critical' ? '🚨 Below minimum!' : '⚠️ Close to limit'}</span>
+                    </div>
+                `).join('')}
+            </div>
+            ` : ''}
+
+            ${data.exam_countdown.length > 0 ? `
+            <div class="card" style="margin-top:16px">
+                <div class="card-header"><span class="card-title">📝 Exam Countdown</span></div>
+                <div style="display:flex;gap:12px;flex-wrap:wrap">
+                    ${data.exam_countdown.map(e => `
+                        <div style="background:var(--surface2);padding:12px 16px;border-radius:8px;text-align:center">
+                            <div style="font-size:24px;font-weight:700;color:${e.days_left <= 5 ? 'var(--red)' : e.days_left <= 10 ? 'var(--amber)' : 'var(--accent)'}">${e.days_left}</div>
+                            <div style="font-size:12px;color:var(--text-muted)">days</div>
+                            <div style="font-size:13px;font-weight:500;margin-top:4px">${e.subject}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+            ` : ''}
+        `;
+
+        // Update notice badge
+        if (data.stats.unread_notices > 0) {
+            document.getElementById('notice-badge').textContent = data.stats.unread_notices;
+            document.getElementById('notice-badge').style.display = 'block';
+        }
+    } catch(e) {
+        container.innerHTML = '<p style="color:var(--red)">Error loading dashboard</p>';
+    }
+}
+
+// ─── NUDGES ──────────────────────────────────────────────────────────────────
+async function loadNudges() {
+    try {
+        const res = await fetch(API + '/nudges?user_id=' + currentUser.user_id);
+        const data = await res.json();
+        // Show nudges as a toast/floating panel (appended to dashboard)
+        const nudges = data.dynamic_nudges || [];
+        if (nudges.length > 0) {
+            const container = document.getElementById('dashboard-content');
+            const nudgeHTML = `
+                <div class="card" style="margin-top:16px">
+                    <div class="card-header"><span class="card-title">🔔 Proactive Alerts</span></div>
+                    ${nudges.slice(0, 5).map(n => `
+                        <div class="nudge-card ${n.type}">
+                            <div class="nudge-dot"></div>
+                            <div>
+                                <div style="font-weight:600;font-size:13px">${n.title}</div>
+                                <div style="font-size:12px;color:var(--text-muted);margin-top:2px">${n.body}</div>
+                            </div>
+                            <button class="nudge-dismiss" onclick="this.closest('.nudge-card').remove()">×</button>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', nudgeHTML);
+        }
+    } catch(e) {}
+}
+
+// ─── CHAT ────────────────────────────────────────────────────────────────────
+async function sendChat() {
+    const input = document.getElementById('chat-input');
+    const message = input.value.trim();
+    if (!message) return;
+    input.value = '';
+
+    // Add user bubble
+    const messages = document.getElementById('chat-messages');
+    messages.innerHTML += `<div class="chat-bubble user">${escapeHtml(message)}</div>`;
+    messages.scrollTop = messages.scrollHeight;
+
+    // Show typing
+    document.getElementById('typing-indicator').style.display = 'block';
+    document.getElementById('suggested-questions').style.display = 'none';
+
+    try {
+        const res = await fetch(API + '/chat', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({user_id: currentUser.user_id, message})
+        });
+        const data = await res.json();
+        document.getElementById('typing-indicator').style.display = 'none';
+        messages.innerHTML += `<div class="chat-bubble assistant">${escapeHtml(data.response)}</div>`;
+        messages.scrollTop = messages.scrollHeight;
+    } catch(e) {
+        document.getElementById('typing-indicator').style.display = 'none';
+        messages.innerHTML += `<div class="chat-bubble assistant" style="color:var(--red)">Sorry, I couldn't process that. Try again?</div>`;
+    }
+}
+
+function askSuggested(question) {
+    document.getElementById('chat-input').value = question;
+    sendChat();
+}
+
+// ─── NOTICES ─────────────────────────────────────────────────────────────────
+async function loadNotices() {
+    const container = document.getElementById('notices-list');
+    try {
+        const res = await fetch(API + '/notices?user_id=' + currentUser.user_id);
+        const data = await res.json();
+        allNotices = data.notices;
+        renderNotices(allNotices);
+    } catch(e) {
+        container.innerHTML = '<p style="color:var(--red)">Error loading notices</p>';
+    }
+}
+
+function renderNotices(notices) {
+    const container = document.getElementById('notices-list');
+    container.innerHTML = notices.map(n => `
+        <div class="notice-card ${n.urgency} ${n.is_read ? 'read' : ''}" onclick="markNoticeRead(${n.id}, this)">
+            <div class="notice-header">
+                <span class="notice-tag ${n.urgency}">${n.urgency}</span>
+                <span class="notice-tag category">${n.category}</span>
+                ${n.source ? `<span style="font-size:10px;color:var(--text-dim);margin-left:auto">${n.source}</span>` : ''}
+            </div>
+            <div class="notice-title">${n.title}</div>
+            <div class="notice-summary">${n.summary || ''}</div>
+            <div class="notice-meta">
+                ${n.deadline ? `<span>⏰ Deadline: ${formatDate(n.deadline)}</span>` : ''}
+                <span>${timeAgo(n.created_at)}</span>
+            </div>
+        </div>
+    `).join('');
+}
+
+function filterNotices(category) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    if (category === 'all') {
+        renderNotices(allNotices);
+    } else {
+        renderNotices(allNotices.filter(n => n.category === category));
+    }
+}
+
+async function markNoticeRead(id, el) {
+    if (el.classList.contains('read')) return; // Already read
+    try {
+        await fetch(API + '/notices/' + id + '/read', {method: 'PATCH'});
+        el.classList.add('read');
+        // Update badge count in real-time
+        const badge = document.getElementById('notice-badge');
+        let count = parseInt(badge.textContent) || 0;
+        count = Math.max(0, count - 1);
+        if (count > 0) {
+            badge.textContent = count;
+        } else {
+            badge.style.display = 'none';
+        }
+    } catch(e) {}
+}
+
+// ─── SCHEDULE ────────────────────────────────────────────────────────────────
+async function loadSchedule() {
+    const container = document.getElementById('schedule-content');
+    try {
+        const res = await fetch(API + '/schedule?user_id=' + currentUser.user_id);
+        const data = await res.json();
+        const today = new Date().toLocaleDateString('en-US', {weekday: 'long'});
+        const todayDay = new Date().getDay() === 0 ? 'Monday' : today;
+
+        const days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+        container.innerHTML = days.map(day => `
+            <div class="schedule-day">
+                <div class="schedule-day-title ${day === todayDay ? 'today' : ''}">${day === todayDay ? '📍 ' + day : day}</div>
+                ${(data.schedule[day] || []).map(e => `
+                    <div class="schedule-event ${e.type}">
+                        <div class="schedule-event-time">${e.start_time} - ${e.end_time}</div>
+                        <div class="schedule-event-title">${e.title}</div>
+                        <div class="schedule-event-loc">${e.location || ''}</div>
+                    </div>
+                `).join('') || '<p style="font-size:11px;color:var(--text-dim);padding:8px">No events</p>'}
+            </div>
+        `).join('');
+
+        if (data.clashes.length > 0) {
+            container.insertAdjacentHTML('afterend', `
+                <div class="card" style="margin-top:16px;border-left:4px solid var(--red)">
+                    <div class="card-title" style="color:var(--red)">⚠️ Scheduling Clashes</div>
+                    ${data.clashes.map(c => `<p style="font-size:13px;margin-top:8px">${c.day}: ${c.event1} conflicts with ${c.event2} (${c.time})</p>`).join('')}
+                </div>
+            `);
+        }
+    } catch(e) {
+        container.innerHTML = '<p style="color:var(--red)">Error loading schedule</p>';
+    }
+}
+
+// ─── ATTENDANCE ──────────────────────────────────────────────────────────────
+async function loadAttendance() {
+    const container = document.getElementById('attendance-content');
+    try {
+        const res = await fetch(API + '/attendance?user_id=' + currentUser.user_id);
+        const data = await res.json();
+
+        container.innerHTML = data.attendance.map(a => `
+            <div class="att-card">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                    <div class="att-subject">${a.subject}</div>
+                    <div class="att-pct ${a.status}">${a.percentage}%</div>
+                </div>
+                <div class="att-bar-container">
+                    <div class="att-bar ${a.status}" style="width:${Math.min(a.percentage, 100)}%"></div>
+                </div>
+                <div class="att-stats">
+                    <span>${a.attended}/${a.total_classes} classes</span>
+                    <span>Required: 75%</span>
+                </div>
+                <div class="att-skip ${a.can_skip ? 'can' : 'cannot'}">
+                    ${a.can_skip 
+                        ? `✅ Can skip next class (would drop to ${a.if_skip_pct}%)` 
+                        : `🚨 Cannot skip! (would drop to ${a.if_skip_pct}%)${a.classes_needed_for_75 > 0 ? ` — need ${a.classes_needed_for_75} more classes to reach 75%` : ''}`}
+                </div>
+            </div>
+        `).join('');
+    } catch(e) {
+        container.innerHTML = '<p style="color:var(--red)">Error loading attendance</p>';
+    }
+}
+
+// ─── EXAMS ───────────────────────────────────────────────────────────────────
+async function loadExams() {
+    const container = document.getElementById('exams-content');
+    try {
+        const res = await fetch(API + '/exams?user_id=' + currentUser.user_id);
+        const data = await res.json();
+
+        container.innerHTML = data.exams.map(e => `
+            <div class="exam-card">
+                <div class="exam-countdown ${e.days_left <= 3 ? 'imminent' : e.days_left <= 7 ? 'soon' : ''}">
+                    ${e.days_left} <span style="font-size:14px;font-weight:400">days left</span>
+                </div>
+                <div class="exam-subject">${e.subject}</div>
+                <div class="exam-meta">
+                    📅 ${formatDate(e.exam_date)} | 🕐 ${e.start_time} - ${e.end_time} | 📍 ${e.venue}
+                </div>
+                <div class="exam-meta" style="margin-top:4px">Type: ${e.exam_type}</div>
+                ${e.syllabus ? `<div class="exam-syllabus"><strong>Syllabus:</strong> ${e.syllabus}</div>` : ''}
+            </div>
+        `).join('');
+    } catch(e) {
+        container.innerHTML = '<p style="color:var(--red)">Error loading exams</p>';
+    }
+}
+
+// ─── PERSONAL LIFE ───────────────────────────────────────────────────────────
+async function loadPersonal() {
+    const container = document.getElementById('personal-content');
+    try {
+        const res = await fetch(API + '/personal/overview?user_id=' + currentUser.user_id);
+        const data = await res.json();
+
+        const budgetPct = data.budget.percentage_used;
+        const budgetColor = budgetPct > 80 ? 'var(--red)' : budgetPct > 60 ? 'var(--amber)' : 'var(--green)';
+
+        const moodEmojis = ['😢', '😟', '😐', '🙂', '😄'];
+
+        container.innerHTML = `
+            <!-- Budget -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">💰 Monthly Budget</span>
+                    <button class="btn btn-sm btn-ghost" onclick="openExpenseModal()">+ Add Expense</button>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:baseline">
+                    <div style="font-size:28px;font-weight:700">₹${Math.round(data.budget.total_spent)}</div>
+                    <div style="font-size:14px;color:var(--text-muted)">of ₹${data.budget.monthly_budget}</div>
+                </div>
+                <div class="budget-bar-container">
+                    <div class="budget-bar" style="width:${Math.min(budgetPct, 100)}%;background:${budgetColor}"></div>
+                </div>
+                <div class="budget-amounts">
+                    <span>This week: ₹${Math.round(data.budget.this_week)}</span>
+                    <span>Remaining: ₹${Math.round(data.budget.remaining)}</span>
+                </div>
+                ${data.budget.categories.length > 0 ? `
+                <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+                    ${data.budget.categories.map(c => `
+                        <span style="font-size:11px;padding:4px 10px;background:var(--surface2);border-radius:12px;color:var(--text-muted)">${c.category}: ₹${Math.round(c.amount)}</span>
+                    `).join('')}
+                </div>` : ''}
+                <div class="budget-tip">💡 ${data.budget.tip}</div>
+            </div>
+
+            <!-- Wellness -->
+            <div class="card">
+                <div class="card-header"><span class="card-title">🧠 Wellness</span></div>
+                <p style="font-size:13px;color:var(--text-muted);margin-bottom:8px">How are you feeling today?</p>
+                <div class="mood-widget">
+                    ${moodEmojis.map((emoji, i) => `
+                        <span class="mood-emoji" onclick="submitMood(${i+1}, this)" title="${['Awful','Stressed','Okay','Good','Great'][i]}">${emoji}</span>
+                    `).join('')}
+                </div>
+                <div style="font-size:12px;color:var(--text-dim);margin-bottom:12px">
+                    Recent average: ${data.wellness.avg_mood}/5 | ${data.wellness.recent_moods.length} check-ins
+                </div>
+                <div class="burnout-card ${data.wellness.burnout_risk}">
+                    <div class="burnout-label">
+                        ${data.wellness.burnout_risk === 'high' ? '🚨 High Burnout Risk' : data.wellness.burnout_risk === 'medium' ? '⚠️ Moderate Stress' : '✅ Doing Well'}
+                    </div>
+                    <div style="font-size:12px;color:var(--text-muted);margin-top:4px">
+                        ${data.wellness.burnout_risk === 'high' 
+                            ? 'Dense schedule + low mood detected. Consider taking a break or talking to someone.' 
+                            : data.wellness.burnout_risk === 'medium' 
+                                ? 'Your mood has been lower than usual. Take care of yourself!'
+                                : 'You\'re managing well. Keep it up!'}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Placements -->
+            <div class="card" style="grid-column: 1 / -1">
+                <div class="card-header"><span class="card-title">🏢 Placement Tracker</span></div>
+                <div class="placement-board">
+                    ${renderPlacementBoard(data.placements)}
+                </div>
+            </div>
+        `;
+    } catch(e) {
+        container.innerHTML = '<p style="color:var(--red)">Error loading personal data</p>';
+    }
+}
+
+function renderPlacementBoard(placements) {
+    const columns = ['Applied', 'Shortlisted', 'Interview', 'Offer', 'Rejected'];
+    return columns.map(status => {
+        const items = placements.filter(p => p.status === status);
+        return `
+            <div class="placement-column">
+                <div class="placement-col-title">${status} (${items.length})</div>
+                ${items.map(p => `
+                    <div class="placement-item">
+                        <div class="placement-company">${p.company}</div>
+                        <div class="placement-role">${p.role}</div>
+                        ${p.notes ? `<div style="font-size:10px;color:var(--text-dim);margin-top:4px">${p.notes}</div>` : ''}
+                    </div>
+                `).join('') || '<p style="font-size:11px;color:var(--text-dim)">None</p>'}
+            </div>
+        `;
+    }).join('');
+}
+
+async function submitMood(mood, el) {
+    document.querySelectorAll('.mood-emoji').forEach(e => e.classList.remove('selected'));
+    el.classList.add('selected');
+    try {
+        await fetch(API + '/personal/mood', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({user_id: currentUser.user_id, mood, note: ''})
+        });
+    } catch(e) {}
+}
+
+function openExpenseModal() { document.getElementById('expense-modal').classList.add('active'); }
+function closeExpenseModal() { document.getElementById('expense-modal').classList.remove('active'); }
+
+async function submitExpense() {
+    const amount = parseFloat(document.getElementById('expense-amount').value);
+    const category = document.getElementById('expense-category').value;
+    const desc = document.getElementById('expense-desc').value;
+    if (!amount) return;
+
+    try {
+        await fetch(API + '/personal/expense', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({user_id: currentUser.user_id, amount, category, description: desc})
+        });
+        closeExpenseModal();
+        loadPersonal();
+    } catch(e) {}
+}
+
+// ─── TASKS ───────────────────────────────────────────────────────────────────
+async function completeTask(id, el) {
+    el.classList.add('done');
+    el.nextElementSibling.classList.add('done');
+    try {
+        await fetch(API + '/tasks/' + id, {
+            method: 'PATCH',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({status: 'completed'})
+        });
+    } catch(e) {}
+}
+
+// ─── UTILITIES ───────────────────────────────────────────────────────────────
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML.replace(/\n/g, '<br>');
+}
+
+function formatDate(dateStr) {
+    if (!dateStr) return '';
+    try {
+        const d = new Date(dateStr);
+        return d.toLocaleDateString('en-IN', {day: 'numeric', month: 'short', year: 'numeric'});
+    } catch(e) { return dateStr; }
+}
+
+function timeAgo(dateStr) {
+    if (!dateStr) return '';
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const hours = Math.floor(diff / 3600000);
+    if (hours < 1) return 'just now';
+    if (hours < 24) return hours + 'h ago';
+    return Math.floor(hours / 24) + 'd ago';
+}
+</script>
+</body>
+</html>
