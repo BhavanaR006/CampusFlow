@@ -2,6 +2,10 @@
 
 > Built for **Amazon HackOn Season 6.0** | AWS Track
 
+> 🌐 **Live Demo:** http://campusflow-frontend-387385940987.s3-website.ap-south-1.amazonaws.com  
+> 🔗 **API Endpoint:** https://mtxtl2zb23.execute-api.ap-south-1.amazonaws.com  
+> 📂 **GitHub:** https://github.com/BhavanaR006/CampusFlow
+
 **CampusFlow** is a unified AI assistant that eliminates the chaos of student life — classes, deadlines, hostel notices, placement prep, attendance, and expenses — all in one intelligent interface.
 
 The student never searches for anything. CampusFlow anticipates needs and acts proactively.
@@ -40,6 +44,15 @@ Student life is scattered across WhatsApp groups, emails, portals, and spreadshe
 ---
 
 ## 📐 AWS Architecture
+
+### AWS Services Used
+- **Amazon Bedrock** (Claude Sonnet) — AI inference for chatbot, summarization, digest, alerts
+- **AWS Lambda** — Serverless backend compute (FastAPI + Mangum)
+- **Amazon API Gateway** — HTTP API routing to Lambda
+- **Amazon S3** — Static frontend hosting + knowledge base storage
+- **Amazon CloudFront** — CDN for frontend delivery
+- **Amazon DynamoDB** — Production database (schemas defined, SQLite for prototype)
+- **AWS IAM** — Least-privilege roles for Lambda execution
 
 ```mermaid
 graph TB
