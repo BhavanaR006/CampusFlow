@@ -1398,6 +1398,8 @@ async function submitMood(mood, el) {
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({user_id: currentUser.user_id, mood, note: ''})
         });
+        // Refresh personal life data immediately
+        loadPersonal();
     } catch(e) {}
 }
 
