@@ -9,7 +9,9 @@ from datetime import datetime, date, timedelta
 from typing import Optional
 
 from dotenv import load_dotenv
-load_dotenv()
+# Only load .env on localhost, not on Lambda
+if not os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+    load_dotenv()
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -40,13 +42,28 @@ bedrock_client = None
 
 try:
     import boto3
-    region = os.getenv("AWS_REGION", "ap-south-1")
-    bedrock_client = boto3.client(
-        "bedrock-runtime",
-        region_name=region,
-        aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
-        aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
-    )
+    region = os.getenv("AWS_REGION", os.getenv("BEDROCK_REGION", "ap-south-1"))
+    
+    # On localhost: .env provides AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY
+    # On Lambda: no .env loaded, no explicit keys — use IAM role automatically
+    access_key = os.getenv("AWS_ACCESS_KEY_ID")
+    secret_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+    
+    if access_key and secret_key:
+        # Localhost — use explicit credentials from .env
+        bedrock_client = boto3.client(
+            "bedrock-runtime",
+            region_name=region,
+            aws_access_key_id=access_key,
+            aws_secret_access_key=secret_key,
+        )
+    else:
+        # Lambda — use IAM role credentials (automatic)
+        bedrock_client = boto3.client(
+            "bedrock-runtime",
+            region_name=region,
+        )
+    
     # Test connection
     bedrock_client.meta.region_name
     print("✅ AWS Bedrock client initialized")
@@ -62,9 +79,9 @@ def call_bedrock(system_prompt: str, user_message: str, max_tokens: int = 500) -
 
     # Try models in order of preference (using inference profile IDs for region compatibility)
     model_ids = [
-        "apac.anthropic.claude-3-5-sonnet-20241022-v2:0",
+        "anthropic.claude-3-haiku-20240307-v1:0",
         "apac.anthropic.claude-3-haiku-20240307-v1:0",
-        "anthropic.claude-3-sonnet-20240229-v1:0",
+        "apac.anthropic.claude-3-5-sonnet-20241022-v2:0",
     ]
 
     import time
