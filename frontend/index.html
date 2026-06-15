@@ -1425,15 +1425,30 @@ async function submitExpense() {
 
 // ─── TASKS ───────────────────────────────────────────────────────────────────
 async function completeTask(id, el) {
-    el.classList.add('done');
-    el.nextElementSibling.classList.add('done');
-    try {
-        await fetch(API + '/tasks/' + id, {
-            method: 'PATCH',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({status: 'completed'})
-        });
-    } catch(e) {}
+    const isDone = el.classList.contains('done');
+    if (isDone) {
+        // Undo — mark as pending
+        el.classList.remove('done');
+        el.nextElementSibling.classList.remove('done');
+        try {
+            await fetch(API + '/tasks/' + id, {
+                method: 'PATCH',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({status: 'pending'})
+            });
+        } catch(e) {}
+    } else {
+        // Complete
+        el.classList.add('done');
+        el.nextElementSibling.classList.add('done');
+        try {
+            await fetch(API + '/tasks/' + id, {
+                method: 'PATCH',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({status: 'completed'})
+            });
+        } catch(e) {}
+    }
 }
 
 // ─── UTILITIES ───────────────────────────────────────────────────────────────
