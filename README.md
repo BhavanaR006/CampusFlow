@@ -99,7 +99,7 @@ campusflow/
 
 ### Prerequisites
 - Python 3.9+
-- AWS credentials with Bedrock access (optional — app works without them)
+- AWS credentials with Bedrock access
 
 ### Setup
 
@@ -203,6 +203,8 @@ CampusFlow uses AWS Bedrock Claude Sonnet for:
 ## 👨‍💻 Team
 
 Built for **Amazon HackOn Season 6.0** — AWS Track
+Team Member 1: Ravi Bhavana | IIT Gandhinagar | ravibhavana33@gmail.com
+Team Member 2: Chepuri Venkata Naga Thrisha | IIT Gandhinagar | chepuri.thrisha@iitgn.ac.in
 
 ---
 
