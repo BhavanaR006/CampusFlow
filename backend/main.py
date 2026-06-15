@@ -936,6 +936,9 @@ def personal_overview(user_id: int):
         "SELECT * FROM mood_checkins WHERE user_id = ? ORDER BY created_at DESC LIMIT 7",
         (user_id,)
     ).fetchall()
+    total_checkins = conn.execute(
+        "SELECT COUNT(*) FROM mood_checkins WHERE user_id = ?", (user_id,)
+    ).fetchone()[0]
     avg_mood = sum(m["mood"] for m in recent_moods) / len(recent_moods) if recent_moods else 3
 
     # Burnout detection
@@ -973,6 +976,7 @@ def personal_overview(user_id: int):
         "wellness": {
             "recent_moods": [dict(m) for m in recent_moods],
             "avg_mood": round(avg_mood, 1),
+            "total_checkins": total_checkins,
             "burnout_risk": burnout_risk,
             "schedule_density": schedule_density,
         },
