@@ -42,31 +42,38 @@ bedrock_client = None
 
 try:
     import boto3
-    region = os.getenv("AWS_REGION", os.getenv("BEDROCK_REGION", "ap-south-1"))
+    region = os.getenv("BEDROCK_REGION", os.getenv("AWS_REGION", "ap-south-1"))
     
-    # On localhost: .env provides AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY
-    # On Lambda: no .env loaded, no explicit keys — use IAM role automatically
-    access_key = os.getenv("AWS_ACCESS_KEY_ID")
-    secret_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+    # On Lambda: use BEDROCK_* env vars and explicitly clear session token
+    # On localhost: use AWS_* from .env
+    bedrock_key = os.getenv("BEDROCK_ACCESS_KEY")
+    bedrock_secret = os.getenv("BEDROCK_SECRET_KEY")
     
-    if access_key and secret_key:
-        # Localhost — use explicit credentials from .env
+    if bedrock_key and bedrock_secret:
+        # Lambda — use explicit IAM user credentials, bypass Lambda's session token
+        os.environ.pop("AWS_SESSION_TOKEN", None)
+        os.environ.pop("AWS_SECURITY_TOKEN", None)
         bedrock_client = boto3.client(
             "bedrock-runtime",
             region_name=region,
-            aws_access_key_id=access_key,
-            aws_secret_access_key=secret_key,
+            aws_access_key_id=bedrock_key,
+            aws_secret_access_key=bedrock_secret,
+        )
+    elif os.getenv("AWS_ACCESS_KEY_ID"):
+        # Localhost — use .env credentials
+        bedrock_client = boto3.client(
+            "bedrock-runtime",
+            region_name=region,
+            aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+            aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
         )
     else:
-        # Lambda — use IAM role credentials (automatic)
-        bedrock_client = boto3.client(
-            "bedrock-runtime",
-            region_name=region,
-        )
+        # No credentials available
+        bedrock_client = None
     
-    # Test connection
-    bedrock_client.meta.region_name
-    print("✅ AWS Bedrock client initialized")
+    if bedrock_client:
+        bedrock_client.meta.region_name
+        print("✅ AWS Bedrock client initialized")
 except Exception as e:
     bedrock_client = None
     print(f"⚠️  Bedrock unavailable ({e}). Using rule-based fallback.")
