@@ -1183,20 +1183,35 @@ function filterNotices(category) {
 }
 
 async function markNoticeRead(id, el) {
-    if (el.classList.contains('read')) return; // Already read
-    try {
-        await fetch(API + '/notices/' + id + '/read', {method: 'PATCH'});
-        el.classList.add('read');
-        // Update badge count in real-time
-        const badge = document.getElementById('notice-badge');
-        let count = parseInt(badge.textContent) || 0;
-        count = Math.max(0, count - 1);
-        if (count > 0) {
+    const isRead = el.classList.contains('read');
+    if (isRead) {
+        // Mark as unread
+        try {
+            await fetch(API + '/notices/' + id + '/unread', {method: 'PATCH'});
+            el.classList.remove('read');
+            // Update badge
+            const badge = document.getElementById('notice-badge');
+            let count = parseInt(badge.textContent) || 0;
+            count++;
             badge.textContent = count;
-        } else {
-            badge.style.display = 'none';
-        }
-    } catch(e) {}
+            badge.style.display = 'block';
+        } catch(e) {}
+    } else {
+        // Mark as read
+        try {
+            await fetch(API + '/notices/' + id + '/read', {method: 'PATCH'});
+            el.classList.add('read');
+            // Update badge
+            const badge = document.getElementById('notice-badge');
+            let count = parseInt(badge.textContent) || 0;
+            count = Math.max(0, count - 1);
+            if (count > 0) {
+                badge.textContent = count;
+            } else {
+                badge.style.display = 'none';
+            }
+        } catch(e) {}
+    }
 }
 
 // ─── SCHEDULE ────────────────────────────────────────────────────────────────

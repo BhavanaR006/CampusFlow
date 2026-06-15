@@ -627,6 +627,15 @@ def mark_notice_read(notice_id: int):
     return {"status": "ok"}
 
 
+@app.patch("/api/notices/{notice_id}/unread")
+def mark_notice_unread(notice_id: int):
+    conn = get_db()
+    conn.execute("UPDATE notices SET is_read = 0 WHERE id = ?", (notice_id,))
+    conn.commit()
+    conn.close()
+    return {"status": "ok"}
+
+
 # ─── SCHEDULE ENDPOINTS ──────────────────────────────────────────────────────
 
 @app.get("/api/schedule")
